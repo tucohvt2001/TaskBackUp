@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Daco\\ProjectWinForm\\BackUpOven\\BackUpOven\\BackUpOven.csproj": {}
+    "C:\\Users\\Admin\\Desktop\\a\\BackUpOven\\BackUpOven\\BackUpOven.csproj": {}
   },
   "projects": {
-    "D:\\Daco\\ProjectWinForm\\BackUpOven\\BackUpOven\\BackUpOven.csproj": {
+    "C:\\Users\\Admin\\Desktop\\a\\BackUpOven\\BackUpOven\\BackUpOven.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Daco\\ProjectWinForm\\BackUpOven\\BackUpOven\\BackUpOven.csproj",
+        "projectUniqueName": "C:\\Users\\Admin\\Desktop\\a\\BackUpOven\\BackUpOven\\BackUpOven.csproj",
         "projectName": "BackUpOven",
-        "projectPath": "D:\\Daco\\ProjectWinForm\\BackUpOven\\BackUpOven\\BackUpOven.csproj",
+        "projectPath": "C:\\Users\\Admin\\Desktop\\a\\BackUpOven\\BackUpOven\\BackUpOven.csproj",
         "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-        "outputPath": "D:\\Daco\\ProjectWinForm\\BackUpOven\\BackUpOven\\obj\\",
+        "outputPath": "C:\\Users\\Admin\\Desktop\\a\\BackUpOven\\BackUpOven\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",

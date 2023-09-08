@@ -264,23 +264,14 @@ namespace BackUpOven
                         DataTable dataTable = new DataTable();
                         dataTable.Clear();
                         adapter.Fill(dataTable);
-                        for (int rowIndex = dataTable.Rows.Count - 1; rowIndex >= 0; rowIndex--)
+                        for (int rowIndex = 0; rowIndex < dataTable.Rows.Count; rowIndex++)
                         {
-                            DataRow row = dataTable.Rows[rowIndex];
-                            bool hasNullValue = false;
-
-                            foreach (DataColumn column in dataTable.Columns)
+                            for (int columnIndex = 0; columnIndex < dataTable.Columns.Count; columnIndex++)
                             {
-                                if (row[column] == DBNull.Value)
+                                if (dataTable.Rows[rowIndex][columnIndex] == DBNull.Value)
                                 {
-                                    hasNullValue = true;
-                                    break;
+                                    dataTable.Rows[rowIndex][columnIndex] = 0;
                                 }
-                            }
-
-                            if (hasNullValue)
-                            {
-                                dataTable.Rows.RemoveAt(rowIndex);
                             }
                         }
                         dgv_Data.DataSource = dataTable;
