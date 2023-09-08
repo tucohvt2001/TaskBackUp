@@ -65,6 +65,8 @@ namespace BackUpOven
             _listUnitNo.Clear();
             clb_Oven.Items.Clear();
 
+            m_prefix = string.Empty;
+
             dt_Start.Value = DateTime.Now;
             dt_End.Value = DateTime.Now;
             using (SQLiteConnection connection = new SQLiteConnection(csSqlite))
@@ -102,7 +104,7 @@ namespace BackUpOven
                         dgv_Data.DataSource = dataTable;
                     }
 
-                    string queryGetColumns = $"SELECT name FROM pragma_table_info('DataLogger1') WHERE name LIKE 'In_Temp%' OR name LIKE 'Plat_Temp%'";
+                    string queryGetColumns = $"SELECT name FROM pragma_table_info('DataLogger1') WHERE name LIKE '%In_Temp%' OR name LIKE '%Plat_Temp%'";
 
                     using (SQLiteDataAdapter adapterGetColumns = new SQLiteDataAdapter(queryGetColumns, connection))
                     {
@@ -117,14 +119,17 @@ namespace BackUpOven
 
                         foreach (string columnName in _listColumnName)
                         {
-                            var replaceOvenNumber = columnName.Replace("In_Temp", "").Replace("Plat_Temp", "");
+                            if (columnName.StartsWith("Log") && string.IsNullOrEmpty(m_prefix))
+                                m_prefix = "Log_";
+
+                            var replaceOvenNumber = columnName.Replace("Log_In_Temp", "").Replace("Log_Plat_Temp", "").Replace("In_Temp", "").Replace("Plat_Temp", "");
                             if (int.TryParse(replaceOvenNumber, out int number))
                             {
                                 if (number < 10)
                                 {
                                     replaceOvenNumber = $"00{number}";
                                 }
-                                else if (number < 100 && number > 10)
+                                else if (number < 100 && number >= 10)
                                 {
                                     replaceOvenNumber = $"0{number}";
                                 }
@@ -139,6 +144,8 @@ namespace BackUpOven
                         }
                     }
 
+
+
                 }
                 catch (Exception ex)
                 {
@@ -146,6 +153,8 @@ namespace BackUpOven
                 }
             }
         }
+
+        string m_prefix = string.Empty;
 
         private void btn_Filter_Click(object sender, EventArgs e)
         {
@@ -233,8 +242,8 @@ namespace BackUpOven
                     if (ovenChecked.ToString().StartsWith("OVEN") && ovenChecked.ToString().Length > 4 &&
                         int.TryParse(ovenChecked.ToString().Substring(4), out int number))
                     {
-                        string columnIn = "In_Temp" + number;
-                        string columnPlat = "Plat_Temp" + number;
+                        string columnIn = string.IsNullOrEmpty(m_prefix) ? "In_Temp" + number : m_prefix + "In_Temp" + number;
+                        string columnPlat = string.IsNullOrEmpty(m_prefix) ? "Plat_Temp" + number : m_prefix + "Plat_Temp" + number;
 
                         _listColumnNameChecked.Add(columnIn);
                         _listColumnNameChecked.Add(columnPlat);
@@ -332,55 +341,69 @@ namespace BackUpOven
             _sqlServerDb.SaveChanges();
             progressBar1.Visible = true;
 
-            foreach (DataGridViewRow row in dgv_Data.Rows)
+            try
             {
-                DateTime time = Convert.ToDateTime(row.Cells["Time"].Value);
-
-                foreach (var unitNo in _listUnitNoChecked)
+                foreach (DataGridViewRow row in dgv_Data.Rows)
                 {
-                    int ovenId = GetOvenIdFromUnitNo(unitNo).GetValueOrDefault();
+                    DateTime time = Convert.ToDateTime(row.Cells["Time"].Value);
 
-                    if (unitNo.ToString().StartsWith("OVEN") && unitNo.ToString().Length > 4 &&
-                        int.TryParse(unitNo.ToString().Substring(4), out int number))
+                    foreach (var unitNo in _listUnitNoChecked)
                     {
-                        //lấy tên cột tách từ UnitNo của các máy được chọn
-                        string inColumnName = "In_Temp" + number;
-                        string platColumnName = "Plat_Temp" + number;
+                        int ovenId = GetOvenIdFromUnitNo(unitNo).GetValueOrDefault();
 
-                        if (row.Cells[inColumnName].Value != null || row.Cells[platColumnName].Value != null)
+                        if (unitNo.ToString().StartsWith("OVEN") && unitNo.ToString().Length > 4 &&
+                            int.TryParse(unitNo.ToString().Substring(4), out int number))
                         {
-                            float inTemp = (float)Convert.ToDouble(row.Cells[inColumnName].Value);
-                            float platTemp = (float)Convert.ToDouble(row.Cells[platColumnName].Value);
+                            //lấy tên cột tách từ UnitNo của các máy được chọn
+                            string inColumnName = string.IsNullOrEmpty(m_prefix) ? "In_Temp" + number : m_prefix + "In_Temp" + number;
+                            string platColumnName = string.IsNullOrEmpty(m_prefix) ? "Plat_Temp" + number : m_prefix + "Plat_Temp" + number;
 
-                            if (inTemp != 0.0f || platTemp != 0.0f)
+                            //string inColumnName = "In_Temp" + number;
+                            //string platColumnName = "Plat_Temp" + number;
+
+                            if (row.Cells[inColumnName].Value != null || row.Cells[platColumnName].Value != null)
                             {
-                                backupData.Add(new Thistory
+                                float inTemp = (float)Convert.ToDouble(row.Cells[inColumnName].Value);
+                                float platTemp = (float)Convert.ToDouble(row.Cells[platColumnName].Value);
+
+                                if (inTemp != 0.0f || platTemp != 0.0f)
                                 {
-                                    Time = time,
-                                    OvenId = ovenId,
-                                    InTemp = inTemp,
-                                    PlatTemp = platTemp
-                                });
+                                    backupData.Add(new Thistory
+                                    {
+                                        Time = time,
+                                        OvenId = ovenId,
+                                        InTemp = inTemp,
+                                        PlatTemp = platTemp
+                                    });
+                                }
                             }
                         }
                     }
+                    //cộng value mỗi khi thêm mới 1 bản ghi
+                    progressBar1.Value++;
+                    progressBar1.Visible = true;
+                    lbl_Loading.Visible = true;
+                    //lấy value chia tổng số  bản ghi
+                    int loading = (int)((double)progressBar1.Value / progressBar1.Maximum * 100);
+                    lbl_Loading.Text = "Loading: " + loading.ToString() + "%";
+                    Application.DoEvents();
                 }
-                //cộng value mỗi khi thêm mới 1 bản ghi
-                progressBar1.Value++;
-                progressBar1.Visible = true;
-                lbl_Loading.Visible = true;
-                //lấy value chia tổng số  bản ghi
-                int loading = (int)((double)progressBar1.Value / progressBar1.Maximum * 100);
-                lbl_Loading.Text = "Loading: " + loading.ToString() + "%";
-                Application.DoEvents();
-            }
 
-            _sqlServerDb.Thistory.AddRange(backupData); // Thêm ds backupdata vào Thistory
-            _sqlServerDb.SaveChanges(); // Lưu dữ liệu vào cơ sở dữ liệu
-            MessageBox.Show("Hoàn thành sao lưu!");
-            lbl_Loading.Visible = false;
-            progressBar1.Visible = false;
-            btn_Backup.Enabled = false;
+                _sqlServerDb.Thistory.AddRange(backupData); // Thêm ds backupdata vào Thistory
+                _sqlServerDb.SaveChanges(); // Lưu dữ liệu vào cơ sở dữ liệu
+                MessageBox.Show("Hoàn thành sao lưu!");
+                lbl_Loading.Visible = false;
+                progressBar1.Visible = false;
+                btn_Backup.Enabled = false;
+            }
+            catch (Exception ex)
+            {
+                if(ex.InnerException != null)
+                    MessageBox.Show(ex.InnerException.Message);
+                else
+                    MessageBox.Show(ex.Message);
+            }
+            
         }
 
         private void btn_Backup_Click(object sender, EventArgs e)
