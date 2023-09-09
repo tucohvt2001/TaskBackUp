@@ -191,23 +191,14 @@ namespace BackUpOven
                         {
                             DataTable dataTable = new DataTable();
                             adapter.Fill(dataTable);
-                            for (int rowIndex = dataTable.Rows.Count - 1; rowIndex >= 0; rowIndex--)
+                            for (int rowIndex = 0; rowIndex < dataTable.Rows.Count; rowIndex++)
                             {
-                                DataRow row = dataTable.Rows[rowIndex];
-                                bool hasNullValue = false;
-
-                                foreach (DataColumn column in dataTable.Columns)
+                                for (int columnIndex = 0; columnIndex < dataTable.Columns.Count; columnIndex++)
                                 {
-                                    if (row[column] == DBNull.Value)
+                                    if (dataTable.Rows[rowIndex][columnIndex] == DBNull.Value)
                                     {
-                                        hasNullValue = true;
-                                        break;
+                                        dataTable.Rows[rowIndex][columnIndex] = 0;
                                     }
-                                }
-
-                                if (hasNullValue)
-                                {
-                                    dataTable.Rows.RemoveAt(rowIndex);
                                 }
                             }
                             dgv_Data.DataSource = dataTable;
@@ -334,6 +325,9 @@ namespace BackUpOven
 
             try
             {
+                int batchSize = 5000; // Số lượng bản ghi mỗi lần lưu
+                int recordCount = 0; // Biến đếm số lượng bản ghi đã xử lý
+
                 foreach (DataGridViewRow row in dgv_Data.Rows)
                 {
                     DateTime time = Convert.ToDateTime(row.Cells["Time"].Value);
@@ -370,22 +364,39 @@ namespace BackUpOven
                             }
                         }
                     }
-                    //cộng value mỗi khi thêm mới 1 bản ghi
+                    // Tăng biến đếm bản ghi đã xử lý
+                    recordCount++;
+
+                    // Kiểm tra xem đã đạt đủ số lượng bản ghi để lưu
+                    if (recordCount >= batchSize)
+                    {
+                        _sqlServerDb.Thistory.AddRange(backupData); // Thêm ds backupdata vào Thistory
+                        _sqlServerDb.SaveChanges(); // Lưu dữ liệu vào cơ sở dữ liệu
+                        backupData.Clear(); // Xóa dữ liệu đã sao lưu
+                        recordCount = 0; // Đặt lại biến đếm
+                    }
+
+                    // Cập nhật thanh tiến trình và hiển thị thông tin
                     progressBar1.Value++;
                     progressBar1.Visible = true;
                     lbl_Loading.Visible = true;
-                    //lấy value chia tổng số  bản ghi
                     int loading = (int)((double)progressBar1.Value / progressBar1.Maximum * 100);
                     lbl_Loading.Text = "Loading: " + loading.ToString() + "%";
                     Application.DoEvents();
                 }
 
-                _sqlServerDb.Thistory.AddRange(backupData); // Thêm ds backupdata vào Thistory
-                _sqlServerDb.SaveChanges(); // Lưu dữ liệu vào cơ sở dữ liệu
+                // Lưu các bản ghi còn lại (nếu còn)
+                if (backupData.Count > 0)
+                {
+                    _sqlServerDb.Thistory.AddRange(backupData);
+                    _sqlServerDb.SaveChanges();
+                }
+
                 MessageBox.Show("Hoàn thành sao lưu!");
                 lbl_Loading.Visible = false;
                 progressBar1.Visible = false;
                 btn_Backup.Enabled = false;
+
             }
             catch (Exception ex)
             {
