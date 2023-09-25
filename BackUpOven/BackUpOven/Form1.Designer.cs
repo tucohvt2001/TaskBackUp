@@ -177,10 +177,10 @@
             // cb_SelectAll
             // 
             cb_SelectAll.AutoSize = true;
-            cb_SelectAll.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point);
+            cb_SelectAll.Font = new Font("Segoe UI", 14.25F, FontStyle.Regular, GraphicsUnit.Point);
             cb_SelectAll.Location = new Point(125, 226);
             cb_SelectAll.Name = "cb_SelectAll";
-            cb_SelectAll.Size = new Size(69, 25);
+            cb_SelectAll.Size = new Size(81, 29);
             cb_SelectAll.TabIndex = 9;
             cb_SelectAll.Text = "Tất cả";
             cb_SelectAll.UseVisualStyleBackColor = true;
@@ -331,6 +331,7 @@
             dgv_Data.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgv_Data.Location = new Point(12, 12);
             dgv_Data.Name = "dgv_Data";
+            dgv_Data.ReadOnly = true;
             dgv_Data.RowTemplate.Height = 25;
             dgv_Data.Size = new Size(1482, 501);
             dgv_Data.TabIndex = 19;
@@ -339,11 +340,13 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = SystemColors.ActiveCaption;
             ClientSize = new Size(1506, 807);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
             Controls.Add(dgv_Data);
             Name = "Form1";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "Form1";
             Load += Form1_Load;
             groupBox2.ResumeLayout(false);

@@ -156,7 +156,8 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(467, 414);
+            BackColor = SystemColors.ActiveCaption;
+            ClientSize = new Size(467, 424);
             Controls.Add(label5);
             Controls.Add(btn_Connect);
             Controls.Add(btn_Test);
@@ -169,6 +170,7 @@
             Controls.Add(label2);
             Controls.Add(label1);
             Name = "FormConnect";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "FormConnect";
             ResumeLayout(false);
             PerformLayout();

@@ -1,9 +1,7 @@
 ﻿using BackUpOven.Models;
 using System.Data;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace BackUpOven
 {
@@ -11,11 +9,11 @@ namespace BackUpOven
     {
         private string csSqlite;
         private string csSqlServer;
+        private SQLServerContext _sqlServerDb;
         private List<string> _listColumnName = new List<string>();
         private List<string> _listUnitNo = new List<string>();
         private List<string> _listUnitNoChecked = new List<string>();
         private List<string> _listColumnNameChecked = new List<string>();
-        private SQLServerContext _sqlServerDb;
 
         public Form1()
         {
@@ -61,7 +59,10 @@ namespace BackUpOven
 
         private void LoadData()
         {
+            btn_Backup.Enabled = false;
+
             _listColumnName.Clear();
+            _listColumnNameChecked.Clear();
             _listUnitNo.Clear();
             clb_Oven.Items.Clear();
 
@@ -100,7 +101,7 @@ namespace BackUpOven
                                 dataTable.Rows.RemoveAt(rowIndex);
                             }
                         }
-
+                        btn_Refresh.Enabled = true;
                         dgv_Data.DataSource = dataTable;
                     }
 
@@ -143,9 +144,6 @@ namespace BackUpOven
                             }
                         }
                     }
-
-
-
                 }
                 catch (Exception ex)
                 {
@@ -400,21 +398,42 @@ namespace BackUpOven
             }
             catch (Exception ex)
             {
-                if(ex.InnerException != null)
+                if (ex.InnerException != null)
                     MessageBox.Show(ex.InnerException.Message);
                 else
                     MessageBox.Show(ex.Message);
             }
-            
+
         }
 
         private void btn_Backup_Click(object sender, EventArgs e)
         {
+            if (!DataGridViewHasValues(dgv_Data))
+            {
+                MessageBox.Show("Không có giá trị trong DataGridView để backup.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return; // Không thực hiện backup nếu DataGridView trống
+            }
+
             var rs = MessageBox.Show("Hành động này sẽ xóa data trong khoảng thời gian đã chọn để backup. Bạn có muốn tiếp tục ?", "Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (rs == DialogResult.Yes)
             {
                 processBackup();
             }
+        }
+
+        private bool DataGridViewHasValues(DataGridView dataGridView)
+        {
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    if (cell.Value != null && !string.IsNullOrWhiteSpace(cell.Value.ToString()))
+                    {
+                        return true; // Có giá trị, không trống
+                    }
+                }
+            }
+            return false; // Không có giá trị
         }
 
         private void cb_SelectAll_CheckedChanged(object sender, EventArgs e)
@@ -437,12 +456,17 @@ namespace BackUpOven
 
         private void btn_Exit_Click(object sender, EventArgs e)
         {
-            this.Close();
+            var rs = MessageBox.Show("Bạn có muốn thoát khỏi chương trình?", "Thông báo", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (rs == DialogResult.Yes)
+            {
+                this.Close();
+            }
         }
 
         private void btn_Refresh_Click(object sender, EventArgs e)
         {
             LoadData();
         }
+
     }
 }
